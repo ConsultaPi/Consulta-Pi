@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Consulta qué dígito aparece en cualquier posición decimal de Pi.">
+  <title>Consulta Pi</title>
+  <style>
+    :root { color-scheme: dark; --bg:#07111f; --panel:#101f33; --text:#f3f7ff; --muted:#a8b7cc; --cyan:#5ee7e1; --purple:#a78bfa; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:radial-gradient(ellipse at top,#142b47 0%,var(--bg) 62%); color:var(--text); }
+    main { width:min(100%,560px); padding:clamp(24px,5vw,42px); border:1px solid #29415e; border-radius:24px; background:rgba(16,31,51,.92); box-shadow:0 24px 80px #0005; }
+    .symbol { color:var(--cyan); font-size:42px; line-height:1; font-weight:700; letter-spacing:-3px; }
+    h1 { margin:12px 0 8px; font-size:clamp(30px,7vw,42px); }
+    .intro { margin:0 0 28px; color:var(--muted); line-height:1.55; }
+    label { display:block; margin-bottom:9px; font-weight:650; }
+    input { width:100%; padding:15px 16px; border-radius:12px; border:1px solid #49627f; background:#081524; color:var(--text); font-size:18px; outline:none; }
+    input:focus { border-color:var(--cyan); box-shadow:0 0 0 3px #5ee7e122; }
+    button { width:100%; margin-top:13px; padding:15px; border:0; border-radius:12px; color:#06131e; background:linear-gradient(100deg,var(--cyan),#9ce9ff); font-size:16px; font-weight:750; cursor:pointer; }
+    button:disabled { opacity:.65; cursor:wait; }
+    .hint { margin:10px 0 0; color:var(--muted); font-size:13px; line-height:1.5; }
+    #result { display:none; margin-top:24px; padding:20px; border-radius:16px; text-align:center; background:#081524; border:1px solid #2a4663; }
+    #result.show { display:block; }
+    .result-label { color:var(--muted); font-size:14px; }
+    #digit { margin:6px 0; font-size:clamp(54px,14vw,78px); line-height:1.1; font-weight:800; color:var(--cyan); }
+    #message { color:var(--muted); font-size:13px; overflow-wrap:anywhere; }
+    footer { margin-top:24px; text-align:center; color:#8294ac; font-size:12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="symbol">π</div>
+    <h1>Consulta Pi</h1>
+    <p class="intro">Descubre qué dígito ocupa una posición decimal de Pi. El conteo empieza después del punto decimal: la posición 1 es el primer dígito.</p>
+    <form id="form">
+      <label for="position">Introduce la posición del dígito (contado después del punto)</label>
+      <input id="position" name="position" type="number" min="1" max="10000" step="1" placeholder="Por ejemplo: 100" required>
+      <button id="submit" type="submit">Consultar dígito</button>
+      <p class="hint">Por ahora se admiten posiciones del 1 al 10 000. El cálculo se realiza en tu navegador.</p>
+    </form>
+    <section id="result" aria-live="polite">
+      <div class="result-label" id="result-label">Dígito encontrado</div>
+      <div id="digit">—</div>
+      <div id="message"></div>
+    </section>
+    <footer>Una herramienta gratuita y sencilla para explorar los decimales de π.</footer>
+  </main>
+<script>
+  const form = document.querySelector("#form");
+  const input = document.querySelector("#position");
+  const button = document.querySelector("#submit");
+  const result = document.querySelector("#result");
+  const digitEl = document.querySelector("#digit");
+  const message = document.querySelector("#message");
+  const label = document.querySelector("#result-label");
+
+  function isqrt(n) {
+    if (n < 2n) return n;
+    let x = n;
+    let y = (x + 1n) >> 1n;
+    while (y < x) {
+      x = y;
+      y = (x + n / x) >> 1n;
+    }
+    return x;
+  }
+
+  // Calcula Pi con la serie de Chudnovsky usando aritmética BigInt.
+  function calculatePiDigits(decimalPlaces) {
+    const extra = 12;
+    const scale = 10n ** BigInt(decimalPlaces + extra);
+    const sqrt10005 = isqrt(10005n * scale * scale);
+    let term = scale;
+    let sum = 13591409n * term;
+    const terms = Math.ceil((decimalPlaces + extra) / 14.181647462) + 2;
+    const constant = 640320n ** 3n;
+
+    for (let k = 1; k < terms; k++) {
+      const kk = BigInt(k);
+      const numerator = -24n * (6n * kk - 5n) * (2n * kk - 1n) * (6n * kk - 1n);
+      const denominator = kk * kk * kk * constant;
+      term = (term * numerator) / denominator;
+      sum += term * (13591409n + 545140134n * kk);
+    }
+
+    const piScaled = (426880n * sqrt10005 * scale) / sum;
+    return piScaled.toString().padStart(decimalPlaces + extra + 1, "0");
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const position = Number(input.value);
+    if (!Number.isSafeInteger(position) || position < 1 || position > 10000) {
+      result.classList.add("show");
+      digitEl.textContent = "—";
+      label.textContent = "Posición no válida";
+      message.textContent = "Introduce un número entero entre 1 y 10 000.";
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Calculando…";
+    result.classList.add("show");
+    digitEl.textContent = "…";
+    label.textContent = "Calculando la posición " + position;
+    message.textContent = "El cálculo se realiza en este dispositivo.";
+    setTimeout(() => {
+      try {
+        const digits = calculatePiDigits(position + 1);
+        const digit = digits[position];
+        digitEl.textContent = digit ?? "—";
+        label.textContent = "Dígito de la posición decimal " + position + " de Pi";
+        message.textContent = "π = 3." + digits.slice(1, Math.min(position + 1, 21)) + (position > 20 ? "…" : "");
+      } catch (error) {
+        digitEl.textContent = "—";
+        label.textContent = "No se pudo completar el cálculo";
+        message.textContent = "Prueba de nuevo con una posición menor.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Consultar dígito";
+      }
+    }, 20);
+  });
+</script>
+</body>
+</html>
