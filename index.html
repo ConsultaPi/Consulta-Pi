@@ -122,7 +122,7 @@
     try {
       const digits = await loadPiDigits();
       digitEl.textContent = digits[position - 1];
-      label.textContent = "Dígito de la posición decimal " + position + " de Pi";
+      label.textContent = "Dígito de la posición " + position + " de Pi";
       message.textContent = "";
     } catch (error) {
       digitEl.textContent = "—";
