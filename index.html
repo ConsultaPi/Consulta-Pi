@@ -110,7 +110,7 @@
     if (!Number.isSafeInteger(position) || position < 1 || position > 1000000) {
       digitEl.textContent = "—";
       label.textContent = "Posición no válida";
-      message.textContent = "Introduce un número entero entre 1 y 1 000 000.";
+      message.textContent = "La posición debe ser de 1 a 1000000. Inténtalo de nuevo.";
       return;
     }
 
