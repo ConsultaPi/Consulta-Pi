@@ -38,7 +38,7 @@
       <label for="position">Introduce la posición del dígito</label>
       <input id="position" name="position" type="number" min="1" max="1000000" step="1" placeholder="Por ejemplo: 100" required>
       <button id="submit" type="submit">Consultar dígito</button>
-      <p class="hint">Consulta posiciones del 1 al 1 000 000 mediante un archivo de dígitos de Pi.</p>
+      <p class="hint">Consulta posiciones del 1 al 1 000 000</p>
     </form>
 
     <section id="result" aria-live="polite">
@@ -109,7 +109,7 @@
       const digits = await loadPiDigits();
       digitEl.textContent = digits[position - 1];
       label.textContent = "Dígito de la posición decimal " + position + " de Pi";
-      message.textContent = "Consulta realizada desde el archivo TXT.";
+      message.textContent = "";
     } catch (error) {
       digitEl.textContent = "—";
       label.textContent = "No se pudo leer el archivo";
